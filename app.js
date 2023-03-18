@@ -14,7 +14,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // IMPORTANT: Express from v4.16 has body-parser implemented. And you can use:
 // app.use(express.urlencoded({ extended: true }));
 
-app.use(adminRoutes);
+// Starting as /admin
+app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 
 // Catch all route
