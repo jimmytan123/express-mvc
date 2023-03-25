@@ -11,9 +11,11 @@ const shopRoutes = require('./routes/shop');
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
-
 // IMPORTANT: Express from v4.16 has body-parser implemented. And you can use:
 // app.use(express.urlencoded({ extended: true }));
+
+// Serviing static files(public folder)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Starting as /admin
 app.use('/admin', adminRoutes);
