@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const app = express();
 
 // Import routes
-const adminRoutes = require('./routes/admin');
+const adminData = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 
 // Register a middleware, do the body parsing for us
@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Starting as /admin
-app.use('/admin', adminRoutes);
+app.use('/admin', adminData.routes);
 app.use(shopRoutes);
 
 // Catch all route
