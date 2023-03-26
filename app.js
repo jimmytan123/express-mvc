@@ -2,9 +2,13 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
+const pug = require('pug');
 
 const app = express();
 
+// Set templating engine
+app.set('view engine', 'pug');
+app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
 const adminData = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
