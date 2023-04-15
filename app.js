@@ -2,15 +2,12 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
-const pug = require('pug');
-const expressHbs = require('express-handlebars');
+
 
 const app = express();
 
 // Set templating engine
-app.engine('hbs', expressHbs({layoutsDir: 'views/layouts/', defaultLayout: 'main-layout', extname: 'hbs'}));
-
-app.set('view engine', 'hbs');
+app.set('view engine', 'ejs');
 app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
 const adminData = require('./routes/admin');
