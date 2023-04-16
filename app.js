@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-// Set templating engine
+// Set templating engine - EJS
 app.set('view engine', 'ejs');
 app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
