@@ -2,15 +2,14 @@
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
-
-
 const app = express();
+const errorController = require('./controllers/error');
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
 app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
-const adminData = require('./routes/admin');
+const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 
 // Register a middleware, do the body parsing for us
@@ -22,12 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Starting as /admin
-app.use('/admin', adminData.routes);
+app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 
 // Catch all route
-app.use((req, res, next) => {
-  res.status(404).render('404', {pageTitle: 'Page Not Found'});
-});
+app.use(errorController.get404);
 
 app.listen(3000);

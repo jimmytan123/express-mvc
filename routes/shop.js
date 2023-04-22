@@ -1,25 +1,8 @@
 const path = require('path');
 const express = require('express');
-
-const rootDir = require('../util/path');
-
 const router = express.Router();
-const adminData = require('./admin');
+const productsController = require('../controllers/products');
 
-router.get('/', (req, res, next) => {
-  // console.log(adminData.products);
-  //__dirname is an environment variable that tells you the absolute path of the directory containing the currently executing file.
-  // res.sendFile(path.join(rootDir, 'views', 'shop.html'));
-
-  const products = adminData.products;
-  res.render('shop', {
-    prods: products,
-    pageTitle: 'Shop',
-    path: '/',
-    hasProducts: products.length > 0,
-    activeShop: true,
-    productCSS: true
-  });
-});
+router.get('/', productsController.getProducts);
 
 module.exports = router;
