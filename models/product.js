@@ -10,11 +10,11 @@ const p = path.join(
   'products.json'
 );
 
-/* 
-    Helper Function for reading file - products.json
-    If the file not exist, pass the empty array
-    cb - callback Function
-*/
+ /**
+ * Helper Function for reading file - products.json
+ * If the file not exist, pass the empty array
+ * @param {function} cb  The callback function
+ */
 const getProductsFromFile = (cb) => {
   const p = path.join(
     path.dirname(require.main.filename),
@@ -41,6 +41,8 @@ module.exports = class Product {
 
   // Save the product to the product.json file
   save() {
+    this.id = Math.random().toString();
+
     getProductsFromFile((products) => {
       products.push(this);
       fs.writeFile(p, JSON.stringify(products), (err) => {
@@ -49,11 +51,24 @@ module.exports = class Product {
     });
   }
 
-  /* 
-   * Static method - It is directly called from the class itself, not the instances
-   * Getting products from the file
-  */
+ /**
+ * Fetching all products
+ * Static method - It is directly called from the class itself.
+ * @param {function} cb  The callback function
+ */
   static fetchAll(cb) {
     getProductsFromFile(cb);
+  }
+
+/**
+ * Finding the product by Id
+ * @param {string} id  The id of the product
+ * @param {function} cb  The callback function
+ */
+  static findById(id, cb) {
+    getProductsFromFile(products => {
+      const product = products.find(product => product.id === id);
+      cb(product);
+    });
   }
 };
