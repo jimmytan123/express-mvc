@@ -10,6 +10,9 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
+/* 
+  Form submit handler, create new product and store it
+*/
 exports.postAddProduct = (req, res) => {
   // console.log(req.body);
 

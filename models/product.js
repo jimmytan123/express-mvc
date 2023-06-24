@@ -11,7 +11,8 @@ const p = path.join(
 );
 
 /* 
-    Helper Function for reading file - products
+    Helper Function for reading file - products.json
+    If the file not exist, pass the empty array
     cb - callback Function
 */
 const getProductsFromFile = (cb) => {
@@ -38,7 +39,7 @@ module.exports = class Product {
     this.price = price;
   }
 
-  // Save the product to the file
+  // Save the product to the product.json file
   save() {
     getProductsFromFile((products) => {
       products.push(this);
@@ -49,9 +50,9 @@ module.exports = class Product {
   }
 
   /* 
-    Static method - It is directly called from the class itself, not the instances
-    Getting products from the file
-   */
+   * Static method - It is directly called from the class itself, not the instances
+   * Getting products from the file
+  */
   static fetchAll(cb) {
     getProductsFromFile(cb);
   }
