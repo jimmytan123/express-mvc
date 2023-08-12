@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const Cart = require('./cart');
 /* 
     Helper variable for the path to the data/products.json
 */
@@ -43,12 +44,12 @@ module.exports = class Product {
   // Save the product to the product.json file
   save() {
     getProductsFromFile((products) => {
-      // If the product has id, then update the product instead of create one
+      // If the product has id, then update the product
       if (this.id) {
         const existingProductIndex = products.findIndex(
           (product) => product.id === this.id
         );
-        
+
         const updatedProducts = [...products];
         updatedProducts[existingProductIndex] = this;
 
@@ -56,12 +57,32 @@ module.exports = class Product {
           console.log(err);
         });
       } else {
+        // Add product mode
         this.id = Math.random().toString();
         products.push(this);
         fs.writeFile(p, JSON.stringify(products), (err) => {
           console.log(err);
         });
       }
+    });
+  }
+
+  /**
+   * Delete product by Id, also delete from the cart if it has the product we need to delete
+   * Static method - It is directly called from the class itself.
+   * @param {function} id  The product id
+   */
+  static deleteById(id) {
+    getProductsFromFile((products) => {
+      const product = products.find((prod) => prod.id === id);
+
+      const updatedProducts = products.filter((prod) => prod.id !== id);
+
+      fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
+        if (!err) {
+          Cart.deleteProduct(id, product.price);
+        }
+      });
     });
   }
 
