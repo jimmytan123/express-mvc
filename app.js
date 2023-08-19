@@ -1,9 +1,13 @@
 // Import statement
 const path = require('path');
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express();
+
 const errorController = require('./controllers/error');
+const db = require('./util/database');
+
+const app = express();
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
@@ -11,6 +15,14 @@ app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+
+db.execute('SELECT * FROM products')
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
