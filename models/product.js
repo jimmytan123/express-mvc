@@ -11,7 +11,17 @@ module.exports = class Product {
     this.price = price;
   }
 
-  save() {}
+  /**
+   * Save product with MySQL
+   * SQL command, don't need to pass id as will automatically added when inserting into the DB
+   * Returns a Promise
+   */
+  save() {
+    return db.execute(
+      'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)',
+      [this.title, this.price, this.imageUrl, this.description]
+    );
+  }
 
   /**
    * Delete product by Id, also delete from the cart if it has the product we need to delete
@@ -21,8 +31,9 @@ module.exports = class Product {
   static deleteById(id) {}
 
   /**
-   * Fetching all products
+   * Fetching all products with MySQL
    * Static method - It is directly called from the class itself.
+   * Returns a Promise
    */
   static fetchAll() {
     return db.execute('SELECT * FROM products');
