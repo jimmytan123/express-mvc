@@ -40,8 +40,10 @@ module.exports = class Product {
   }
 
   /**
-   * Finding the product by Id
+   * Finding the product by Id with MySQL (it will find and replace id with '?')
    * @param {string} id  The id of the product
    */
-  static findById(id) {}
+  static findById(id) {
+    return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
+  }
 };
