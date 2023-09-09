@@ -1,9 +1,12 @@
 // Import statement
 const path = require('path');
+
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express();
+
 const errorController = require('./controllers/error');
+
+const app = express();
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');

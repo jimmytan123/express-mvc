@@ -1,36 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+const db = require('../util/database');
 
 const Cart = require('./cart');
-/* 
-    Helper variable for the path to the data/products.json
-*/
-const p = path.join(
-  path.dirname(require.main.filename),
-  'data',
-  'products.json'
-);
-
-/**
- * Helper Function for reading file - products.json
- * If the file not exist, pass the empty array
- * @param {function} cb  The callback function
- */
-const getProductsFromFile = (cb) => {
-  const p = path.join(
-    path.dirname(require.main.filename),
-    'data',
-    'products.json'
-  );
-
-  fs.readFile(p, (err, fileContent) => {
-    if (err) {
-      cb([]);
-    } else {
-      cb(JSON.parse(fileContent));
-    }
-  });
-};
 
 module.exports = class Product {
   constructor(id, title, imageUrl, description, price) {
@@ -41,30 +11,16 @@ module.exports = class Product {
     this.price = price;
   }
 
-  // Save the product to the product.json file
+  /**
+   * Save product with MySQL
+   * SQL command, don't need to pass id as will automatically added when inserting into the DB
+   * Returns a Promise
+   */
   save() {
-    getProductsFromFile((products) => {
-      // If the product has id, then update the product
-      if (this.id) {
-        const existingProductIndex = products.findIndex(
-          (product) => product.id === this.id
-        );
-
-        const updatedProducts = [...products];
-        updatedProducts[existingProductIndex] = this;
-
-        fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
-          console.log(err);
-        });
-      } else {
-        // Add product mode
-        this.id = Math.random().toString();
-        products.push(this);
-        fs.writeFile(p, JSON.stringify(products), (err) => {
-          console.log(err);
-        });
-      }
-    });
+    return db.execute(
+      'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)',
+      [this.title, this.price, this.imageUrl, this.description]
+    );
   }
 
   /**
@@ -72,38 +28,22 @@ module.exports = class Product {
    * Static method - It is directly called from the class itself.
    * @param {function} id  The product id
    */
-  static deleteById(id) {
-    getProductsFromFile((products) => {
-      const product = products.find((prod) => prod.id === id);
-
-      const updatedProducts = products.filter((prod) => prod.id !== id);
-
-      fs.writeFile(p, JSON.stringify(updatedProducts), (err) => {
-        if (!err) {
-          Cart.deleteProduct(id, product.price);
-        }
-      });
-    });
-  }
+  static deleteById(id) {}
 
   /**
-   * Fetching all products
+   * Fetching all products with MySQL
    * Static method - It is directly called from the class itself.
-   * @param {function} cb  The callback function
+   * Returns a Promise
    */
-  static fetchAll(cb) {
-    getProductsFromFile(cb);
+  static fetchAll() {
+    return db.execute('SELECT * FROM products');
   }
 
   /**
-   * Finding the product by Id
+   * Finding the product by Id with MySQL (it will find and replace id with '?')
    * @param {string} id  The id of the product
-   * @param {function} cb  The callback function
    */
-  static findById(id, cb) {
-    getProductsFromFile((products) => {
-      const product = products.find((product) => product.id === id);
-      cb(product);
-    });
+  static findById(id) {
+    return db.execute('SELECT * FROM products WHERE products.id = ?', [id]);
   }
 };
