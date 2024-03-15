@@ -17,12 +17,19 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const price = req.body.price;
 
-  const product = new Product(null, title, imageUrl, description, price);
-  
-  product
-    .save()
-    .then(() => res.redirect('/'))
-    .catch((err) => console.log(err));
+  // Create product with Sequelize
+  Product.create({
+    title: title,
+    price: price,
+    description: description,
+    imageUrl: imageUrl,
+  })
+    .then((result) => {
+      console.log(result, 'Created Product to DB');
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getEditProduct = (req, res, next) => {
