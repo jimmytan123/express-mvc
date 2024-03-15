@@ -33,7 +33,7 @@ exports.postAddProduct = (req, res) => {
 };
 
 exports.getEditProduct = (req, res, next) => {
-  // Read the query parameters - ?edit=<>
+  // Read the query parameters - admin/edit-product/:productId?edit=<>
   const editMode = req.query.edit;
 
   if (!editMode) {
@@ -42,18 +42,20 @@ exports.getEditProduct = (req, res, next) => {
 
   const pordId = req.params.productId;
 
-  Product.findById(pordId, (product) => {
-    if (!product) {
-      return res.redirect('/');
-    }
+  Product.findByPk(pordId)
+    .then((product) => {
+      if (!product) {
+        return res.redirect('/');
+      }
 
-    res.render('admin/edit-product', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
-      editing: editMode,
-      product: product,
-    });
-  });
+      res.render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
+        editing: editMode,
+        product: product,
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -65,17 +67,21 @@ exports.postEditProduct = (req, res, next) => {
     price: updatedPrice,
   } = req.body;
 
-  const updatedProduct = new Product(
-    prodId,
-    updatedTitle,
-    updatedImageUrl,
-    updatedDescription,
-    updatedPrice
-  );
+  Product.findByPk(prodId)
+    .then((product) => {
+      product.title = updatedTitle;
+      product.imageUrl = updatedImageUrl;
+      product.description = updatedDescription;
+      product.price = updatedPrice;
 
-  updatedProduct.save();
-
-  res.redirect('/admin/products');
+      // save() provided by Sequelize, to update DB, and will return a Promise
+      return product.save();
+    })
+    .then((result) => {
+      console.log('Updated Product successfully');
+      res.redirect('/admin/products');
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
