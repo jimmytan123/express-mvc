@@ -32,9 +32,9 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 
 sequelize
-  .sync()
+  .sync() // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
   .then((result) => {
-    // console.log(result);
+    //console.log(result); 
     app.listen(3000);
     console.log('Listening in port 3000...');
   })
