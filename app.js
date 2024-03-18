@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
 const sequelize = require('./util/database');
+const Product = require('./models/product');
+const User = require('./models/user');
 
 const app = express();
 
@@ -31,10 +33,14 @@ app.use(shopRoutes);
 // Catch all route
 app.use(errorController.get404);
 
+// Set SQL model relationship
+Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+User.hasMany(Product);
+
 sequelize
-  .sync() // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
+  .sync({ force: true }) // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
   .then((result) => {
-    //console.log(result); 
+    //console.log(result);
     app.listen(3000);
     console.log('Listening in port 3000...');
   })
