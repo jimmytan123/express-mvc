@@ -38,7 +38,7 @@ Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
 User.hasMany(Product);
 
 sequelize
-  .sync({ force: true }) // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
+  .sync() // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
   .then((result) => {
     //console.log(result);
     app.listen(3000);
