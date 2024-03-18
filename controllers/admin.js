@@ -17,7 +17,6 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const price = req.body.price;
 
-
   // THIS is the alternately way
   // Product.create({
   //   title: title,
@@ -26,7 +25,7 @@ exports.postAddProduct = (req, res) => {
   //   imageUrl: imageUrl,
   //   userId: req.user.id,
   // });
-  
+
   // Create product with Sequelize
   req.user
     .createProduct({
@@ -52,10 +51,14 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect('/');
   }
 
-  const pordId = req.params.productId;
+  const prodId = req.params.productId;
 
-  Product.findByPk(pordId)
-    .then((product) => {
+  req.user
+    .getProducts({ where: { id: prodId } })
+    // Product.findByPk(prodId)
+    .then((products) => {
+      const product = products[0];
+
       if (!product) {
         return res.redirect('/');
       }
@@ -97,7 +100,8 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  req.user
+    .getProducts()
     .then((products) => {
       res.render('admin/products', {
         prods: products,
