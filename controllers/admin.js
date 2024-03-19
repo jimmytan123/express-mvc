@@ -17,7 +17,7 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const price = req.body.price;
 
-  const product = new Product(title, price, description, imageUrl);
+  const product = new Product(title, price, imageUrl, description);
 
   product
     .save()
@@ -40,12 +40,8 @@ exports.getEditProduct = (req, res, next) => {
 
   const prodId = req.params.productId;
 
-  req.user
-    .getProducts({ where: { id: prodId } })
-    // Product.findByPk(prodId)
-    .then((products) => {
-      const product = products[0];
-
+  Product.findById(prodId)
+    .then((product) => {
       if (!product) {
         return res.redirect('/');
       }
@@ -69,16 +65,16 @@ exports.postEditProduct = (req, res, next) => {
     price: updatedPrice,
   } = req.body;
 
-  Product.findByPk(prodId)
-    .then((product) => {
-      product.title = updatedTitle;
-      product.imageUrl = updatedImageUrl;
-      product.description = updatedDescription;
-      product.price = updatedPrice;
+  const product = new Product(
+    updatedTitle,
+    updatedPrice,
+    updatedDescription,
+    updatedImageUrl,
+    prodId
+  );
 
-      // save() provided by Sequelize, to update DB, and will return a Promise
-      return product.save();
-    })
+  product
+    .save()
     .then((result) => {
       // console.log('Updated Product successfully');
       res.redirect('/admin/products');
@@ -87,8 +83,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  req.user
-    .getProducts()
+  Product.fetchAll()
     .then((products) => {
       res.render('admin/products', {
         prods: products,
