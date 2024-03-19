@@ -17,25 +17,12 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const price = req.body.price;
 
-  // THIS is the alternately way
-  // Product.create({
-  //   title: title,
-  //   price: price,
-  //   description: description,
-  //   imageUrl: imageUrl,
-  //   userId: req.user.id,
-  // });
+  const product = new Product(title, price, description, imageUrl);
 
-  // Create product with Sequelize
-  req.user
-    .createProduct({
-      title: title,
-      price: price,
-      description: description,
-      imageUrl: imageUrl,
-    })
+  product
+    .save()
     .then((result) => {
-      // console.log(result, 'Created Product to DB');
+      console.log('Created product');
       res.redirect('/admin/products');
     })
     .catch((err) => {
