@@ -5,6 +5,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
+const sequelize = require('./util/database');
+const Product = require('./models/product');
+const User = require('./models/user');
+const Cart = require('./models/cart');
+const CartItem = require('./models/cart-item');
+const Order = require('./models/order');
+const OrderItem = require('./models/order-item');
 
 const app = express();
 
@@ -20,8 +27,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // IMPORTANT: Express from v4.16 has body-parser implemented. And you can use:
 // app.use(express.urlencoded({ extended: true }));
 
-// Serviing static files(public folder)
+// Serving static files(public folder)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Register middleware for setting user to the request
+app.use((req, res, next) => {
+  User.findByPk(1)
+    .then((user) => {
+      // Store user field to the request
+      req.user = user;
+
+      next();
+    })
+    .catch((err) => console.log(err));
+});
 
 // Starting as /admin
 app.use('/admin', adminRoutes);
@@ -30,5 +49,39 @@ app.use(shopRoutes);
 // Catch all route
 app.use(errorController.get404);
 
-app.listen(3000);
-console.log('Listening in port 3000...');
+// Set SQL model relationship/associations
+Product.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+User.hasMany(Product);
+User.hasOne(Cart);
+Cart.belongsTo(User);
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
+Order.belongsTo(User);
+User.hasMany(Order);
+Order.belongsToMany(Product, { through: OrderItem });
+
+sequelize
+  // .sync({ force: true })
+  .sync() // Look at the defined models then create tables for them automatically. If exist, won't create/overwrite them.
+  .then((result) => {
+    return User.findByPk(1);
+    //console.log(result);
+  })
+  .then((user) => {
+    if (!user) {
+      return User.create({ name: 'Jim', email: 'test@test.com' });
+    }
+
+    return user;
+  })
+  .then((user) => {
+    // console.log(user);
+    return user.createCart();
+  })
+  .then((cart) => {
+    app.listen(3000);
+    console.log('Listening in port 3000...');
+  })
+  .catch((err) => {
+    console.log(err);
+  });
