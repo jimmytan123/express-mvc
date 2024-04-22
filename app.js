@@ -12,6 +12,7 @@ const app = express();
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
 app.set('views', 'views'); // set views folder as where the views are stored
+
 // Import routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
@@ -29,10 +30,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Routes
 // Starting as /admin
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
-
 // Catch all route
 app.use(errorController.get404);
 
