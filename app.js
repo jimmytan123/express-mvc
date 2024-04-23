@@ -31,11 +31,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   User.findById('6627eb4999ff37bd344ce44b')
     .then((user) => {
-      req.user = user;
+      req.user = user; // store user in the request
       next();
     })
     .catch((err) => console.log(err));
-  next();
 });
 
 // Routes
