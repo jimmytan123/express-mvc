@@ -7,6 +7,8 @@ const bodyParser = require('body-parser');
 const errorController = require('./controllers/error');
 
 const mongoConnect = require('./util/database').mongoConnect;
+const User = require('./models/user');
+
 const app = express();
 
 // Set templating engine - EJS
@@ -27,6 +29,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Register middleware for setting user to the request
 app.use((req, res, next) => {
+  User.findById('6627eb4999ff37bd344ce44b')
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
   next();
 });
 
