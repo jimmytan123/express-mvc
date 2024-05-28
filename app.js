@@ -31,7 +31,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   User.findById('6627eb4999ff37bd344ce44b')
     .then((user) => {
-      req.user = user; // store user in the request
+      /*
+       * Use the user data coming from the DB, create a User Object instance with that user data from db,
+       * and store User Object in the Request
+       */
+      req.user = new User(user.name, user.email, user.cart, user._id);
       next();
     })
     .catch((err) => console.log(err));
