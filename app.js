@@ -29,7 +29,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Register middleware for setting user to the request
 app.use((req, res, next) => {
-  User.findById('6627eb4999ff37bd344ce44b')
+  User.findById('6658c6c9d2390b42df2c8af7')
     .then((user) => {
       /*
        * Use the user data coming from the DB, create a User Object instance with that user data from db,
