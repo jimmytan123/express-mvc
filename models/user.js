@@ -101,10 +101,20 @@ class User {
   addOrder() {
     const db = getDb();
 
-    //Create/reach out collection orders, insert the cart info, empty the cart afterwards
-    return db
-      .collection('orders')
-      .insertOne(this.cart)
+    // Get the cart with enriched info about products, then construct the order obj
+    return this.getCart()
+      .then((products) => {
+        const order = {
+          items: products,
+          user: {
+            _id: new ObjectId(this._id),
+            name: this.name,
+          },
+        };
+
+        //Create/reach out collection orders, insert the cart info, empty the cart afterwards
+        return db.collection('orders').insertOne(order);
+      })
       .then((result) => {
         // Empty cart in the user object
         this.cart = { items: [] };
@@ -117,6 +127,20 @@ class User {
             { $set: { cart: { items: [] } } }
           );
       });
+  }
+
+  getOrders() {
+    const db = getDb();
+
+    // Find all orders associated with the current user
+    return db
+      .collection('orders')
+      .find({ 'user._id': new ObjectId(this._id) })
+      .toArray()
+      .then((orders) => {
+        return orders;
+      })
+      .catch((err) => console.log(err));
   }
 
   static findById(userId) {
