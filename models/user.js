@@ -98,6 +98,27 @@ class User {
       );
   }
 
+  addOrder() {
+    const db = getDb();
+
+    //Create/reach out collection orders, insert the cart info, empty the cart afterwards
+    return db
+      .collection('orders')
+      .insertOne(this.cart)
+      .then((result) => {
+        // Empty cart in the user object
+        this.cart = { items: [] };
+
+        // Empty cart in the DB
+        return db
+          .collection('users')
+          .updateOne(
+            { _id: new ObjectId(this._id) },
+            { $set: { cart: { items: [] } } }
+          );
+      });
+  }
+
   static findById(userId) {
     const db = getDb();
 
