@@ -1,5 +1,5 @@
 <form action="/cart" method="POST">
   <button class="btn" type="submit">Add to Cart</button>
-  <!-- The POST request will pass the product id info into the BE -->
-  <input type="hidden" name="productId" value="<%= product.id%>" />
+  <!-- The POST request will pass the product id info into the BE via the request body -->
+  <input type="hidden" name="productId" value="<%= product._id%>" />
 </form>
