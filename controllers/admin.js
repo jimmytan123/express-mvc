@@ -18,7 +18,13 @@ exports.postAddProduct = (req, res) => {
   const price = req.body.price;
 
   // Create an instance of product model via Mongoose
-  const product = new Product({ title, price, description, imageUrl });
+  const product = new Product({
+    title,
+    price,
+    description,
+    imageUrl,
+    userId: req.user._id,
+  });
 
   product
     .save()
