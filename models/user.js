@@ -25,6 +25,40 @@ const userSchema = new Schema({
   },
 });
 
+// Define method addToCart to the user schema
+userSchema.methods.addToCart = function (product) {
+  // Return the cart product index in the current cart
+  const cartProductIndex = this.cart.items.findIndex((cp) => {
+    return cp.productId.toString() === product._id.toString();
+  });
+
+  let newQuantity = 1;
+  const updatedCartItems = [...this.cart.items]; // create a new array with all items of the cart
+
+  /* If product exists in the current cart, update quantity;
+   * else, add a new object
+   */
+  if (cartProductIndex >= 0) {
+    newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+    // Update the cart array with a new quantity
+    updatedCartItems[cartProductIndex].quantity = newQuantity;
+  } else {
+    // Add a new cart item
+    updatedCartItems.push({
+      productId: product._id,
+      quantity: newQuantity,
+    });
+  }
+  // Add product info object to the cart
+  const updatedCart = {
+    items: updatedCartItems,
+  };
+
+  // Update the user to have the updated cart to the DB (save() is an utility function)
+  this.cart = updatedCart;
+  return this.save();
+};
+
 module.exports = mongoose.model('User', userSchema);
 
 // const getDb = require('../util/database').getDb;
