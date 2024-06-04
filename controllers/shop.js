@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const Order = require('../models/order');
 
 exports.getProducts = (req, res, next) => {
   // Find all documents
@@ -48,8 +49,8 @@ exports.getCart = (req, res, next) => {
   req.user
     .populate('cart.items.productId') // fetch more info about products
     .then((user) => {
-      console.log(user.cart.items);
       const products = user.cart.items;
+
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
@@ -88,8 +89,30 @@ exports.postCartDeleteProduct = (req, res, next) => {
 
 exports.postOrder = (req, res, next) => {
   req.user
-    .addOrder()
+    .populate('cart.items.productId') // fetch/populate more info about products
+    .then((user) => {
+      // Construct a products array that match the order schema
+      const products = user.cart.items.map((item) => {
+        return {
+          quantity: item.quantity,
+          product: { ...item.productId._doc }, // expand the product doc
+        };
+      });
+
+      // Create new order based on the order schema via Mongoose
+      const order = new Order({
+        user: { name: req.user.name, userId: req.user },
+        products: products,
+      });
+
+      // save order to the DB
+      return order.save();
+    })
     .then((result) => {
+      // clear cart
+      return req.user.clearCart();
+    })
+    .then(() => {
       res.redirect('/orders');
     })
     .catch((err) => console.log(err));
