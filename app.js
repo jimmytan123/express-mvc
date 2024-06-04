@@ -3,10 +3,10 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const errorController = require('./controllers/error');
 
-const mongoConnect = require('./util/database').mongoConnect;
 const User = require('./models/user');
 
 const app = express();
@@ -29,13 +29,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Register middleware for setting user to the request
 app.use((req, res, next) => {
-  User.findById('6658c6c9d2390b42df2c8af7')
+  User.findById('665e0270cce6d037b03830a6')
     .then((user) => {
       /*
        * Use the user data coming from the DB, create a User Object instance with that user data from db,
        * and store User Object in the Request
        */
-      req.user = new User(user.name, user.email, user.cart, user._id);
+      req.user = user;
       next();
     })
     .catch((err) => console.log(err));
@@ -48,7 +48,26 @@ app.use(shopRoutes);
 // Catch all route
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  app.listen(3000);
-  console.log('Listening in port 3000');
-});
+mongoose
+  .connect(
+    'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0'
+  )
+  .then((result) => {
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: 'Jim',
+          email: 'jim@test.com',
+          cart: { items: [] },
+        });
+
+        user.save();
+      }
+    });
+
+    app.listen(3000);
+    console.log('App listening in localhost:3000...');
+  })
+  .catch((err) => {
+    console.log(err);
+  });
