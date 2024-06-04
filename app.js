@@ -18,6 +18,7 @@ app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -45,6 +46,7 @@ app.use((req, res, next) => {
 // Starting as /admin
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 // Catch all route
 app.use(errorController.get404);
 
