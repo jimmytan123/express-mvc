@@ -4,12 +4,20 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session); // session storage
 
 const errorController = require('./controllers/error');
-
 const User = require('./models/user');
 
+const MONGODB_URI =
+  'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0';
+
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions',
+});
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
@@ -18,6 +26,7 @@ app.set('views', 'views'); // set views folder as where the views are stored
 // Import routes
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,14 +36,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Serving static files(public folder)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Register middleware for setting user to the request
+// Register middleware for Session
+app.use(
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store, // Store session to the DB instead of memory by default
+  })
+);
+
+// Register middleware for setting user in request
 app.use((req, res, next) => {
-  User.findById('665e0270cce6d037b03830a6')
+  if (!req.session.user) {
+    return next();
+  }
+
+  User.findById(req.session.user._id)
     .then((user) => {
-      /*
-       * Use the user data coming from the DB, create a User Object instance with that user data from db,
-       * and store User Object in the Request
-       */
       req.user = user;
       next();
     })
@@ -45,13 +64,12 @@ app.use((req, res, next) => {
 // Starting as /admin
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 // Catch all route
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0'
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     User.findOne().then((user) => {
       if (!user) {
