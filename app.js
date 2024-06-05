@@ -4,6 +4,7 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
 
 const errorController = require('./controllers/error');
 
@@ -27,6 +28,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serving static files(public folder)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Register middleware for Session
+app.use(
+  session({ secret: 'my secret', resave: false, saveUninitialized: false })
+);
 
 // Register middleware for setting user to the request
 app.use((req, res, next) => {
