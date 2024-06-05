@@ -5,12 +5,19 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session); // session storage
 
 const errorController = require('./controllers/error');
-
 const User = require('./models/user');
 
+const MONGODB_URI =
+  'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0';
+
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions',
+});
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
@@ -31,7 +38,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Register middleware for Session
 app.use(
-  session({ secret: 'my secret', resave: false, saveUninitialized: false })
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store, // Store session to the DB instead of memory by default
+  })
 );
 
 // Register middleware for setting user to the request
@@ -57,9 +69,7 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-  .connect(
-    'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0'
-  )
+  .connect(MONGODB_URI)
   .then((result) => {
     User.findOne().then((user) => {
       if (!user) {
