@@ -46,14 +46,14 @@ app.use(
   })
 );
 
-// Register middleware for setting user to the request
+// Register middleware for setting user in request
 app.use((req, res, next) => {
-  User.findById('665e0270cce6d037b03830a6')
+  if (!req.session.user) {
+    return next();
+  }
+
+  User.findById(req.session.user._id)
     .then((user) => {
-      /*
-       * Use the user data coming from the DB, create a User Object instance with that user data from db,
-       * and store User Object in the Request
-       */
       req.user = user;
       next();
     })
