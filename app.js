@@ -52,9 +52,10 @@ app.use((req, res, next) => {
     return next();
   }
 
+  // Retrive the user doc from DB by using the session user id
   User.findById(req.session.user._id)
     .then((user) => {
-      req.user = user;
+      req.user = user; // store user in the request
       next();
     })
     .catch((err) => console.log(err));

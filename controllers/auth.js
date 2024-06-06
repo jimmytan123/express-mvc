@@ -18,21 +18,41 @@ exports.getSignup = (req, res, next) => {
 };
 
 exports.postLogin = (req, res, next) => {
-  // After clicking login btn, set Session in the request, be aware that you will find a new cookie called connect.sid also added in the browser. The cookie is for identify the user, but sensetive info is still stored in the session(Server).
-  User.findById('665e0270cce6d037b03830a6')
-    .then((user) => {
-      /*
-       * Use the user data coming from the DB,
-       * and store user in the session(lives in DB)
-       */
-      req.session.user = user;
-      req.session.isLoggedIn = true;
+  // After clicking login btn, set Session in the request, be aware that you will find a new cookie called connect.sid also added in the browser. The cookie is for identify the user's session, but sensetive info is still stored in the session(Server).
 
-      // To ensure the session is created before navigate back to /
-      req.session.save((err) => {
-        console.log(err);
-        res.redirect('/');
-      });
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // Find user by input email
+  User.findOne({ email: email })
+    .then((user) => {
+      if (!user) return res.redirect('/login');
+
+      // Compare the hashed version of the input email to the hased password stored in the DB
+      bcrypt
+        .compare(password, user.password)
+        .then((result) => {
+          if (result === true) {
+            /*
+        
+             * Store user & isLoggedIn in the session(lives in DB)
+             */
+            req.session.user = user;
+            req.session.isLoggedIn = true;
+
+            // To ensure the session is created before navigate back to /
+            return req.session.save((err) => {
+              console.log(err);
+              res.redirect('/');
+            });
+          }
+
+          res.redirect('/login');
+        })
+        .catch((err) => {
+          console.log(err);
+          res.redirect('/login');
+        });
     })
     .catch((err) => console.log(err));
 };
