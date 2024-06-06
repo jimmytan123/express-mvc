@@ -40,7 +40,6 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: 'Shop',
         path: '/',
-        isAuthenticated: req.session.isLoggedIn,
       });
     })
     .catch((err) => {
@@ -105,7 +104,7 @@ exports.postOrder = (req, res, next) => {
 
       // Create new order based on the order schema via Mongoose
       const order = new Order({
-        user: { name: req.user.name, userId: req.user },
+        user: { email: req.user.email, userId: req.user },
         products: products,
       });
 

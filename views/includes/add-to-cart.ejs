@@ -1,4 +1,5 @@
 <form action="/cart" method="POST">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
   <button class="btn" type="submit">Add to Cart</button>
   <!-- The POST request will pass the product id info into the BE via the request body -->
   <input type="hidden" name="productId" value="<%= product._id%>" />

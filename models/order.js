@@ -10,7 +10,7 @@ const orderSchema = new Schema({
     },
   ], // an array of product objects
   user: {
-    name: {
+    email: {
       type: String,
       required: true,
     },
