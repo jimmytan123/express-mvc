@@ -36,7 +36,33 @@ exports.postLogin = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-exports.postSignup = (req, res, next) => {};
+exports.postSignup = (req, res, next) => {
+  // Retrieve sign up info to create user (TODO: add validation!)
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+
+  // Find if the user already exists by searching email
+  User.findOne({ email: email })
+    .then((userDoc) => {
+      if (userDoc) {
+        return res.redirect('/signup');
+      }
+
+      // Create user and save in DB
+      const user = new User({
+        email: email,
+        password: password,
+        cart: { items: [] },
+      });
+
+      return user.save();
+    })
+    .then((result) => {
+      res.redirect('/login');
+    })
+    .catch((err) => console.log(err));
+};
 
 exports.postLogout = (req, res, next) => {
   // Clear session(stored in DB) and redirect to root route afterwards
