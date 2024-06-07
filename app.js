@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session); // session storage
+const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -18,6 +20,7 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: 'sessions',
 });
+const csrfProtection = csrf();
 
 // Set templating engine - EJS
 app.set('view engine', 'ejs');
@@ -46,18 +49,33 @@ app.use(
   })
 );
 
+// Register CSRF Protection
+app.use(csrfProtection);
+
+// Initialize flash
+app.use(flash());
+
 // Register middleware for setting user in request
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
   }
 
+  // Retrive the user doc from DB by using the session user id
   User.findById(req.session.user._id)
     .then((user) => {
-      req.user = user;
+      req.user = user; // store user in the request
       next();
     })
     .catch((err) => console.log(err));
+});
+
+// Middleware to set local variables that pass into views
+app.use((req, res, next) => {
+  // isAuthenticated and csrfToken will be set for every request that renders views
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
 });
 
 // Routes
@@ -71,18 +89,6 @@ app.use(errorController.get404);
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: 'Jim',
-          email: 'jim@test.com',
-          cart: { items: [] },
-        });
-
-        user.save();
-      }
-    });
-
     app.listen(3000);
     console.log('App listening in localhost:3000...');
   })
