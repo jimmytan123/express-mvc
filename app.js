@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session); // session storage
 const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -50,6 +51,9 @@ app.use(
 
 // Register CSRF Protection
 app.use(csrfProtection);
+
+// Initialize flash
+app.use(flash());
 
 // Register middleware for setting user in request
 app.use((req, res, next) => {
