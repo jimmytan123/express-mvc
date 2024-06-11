@@ -6,7 +6,11 @@ const User = require('../models/user');
 
 router.get('/login', authController.getLogin);
 
-router.post('/login', authController.postLogin);
+router.post(
+  '/login',
+  [body('email').isEmail().withMessage('Please enter a valid email.')],
+  authController.postLogin
+);
 
 router.post('/logout', authController.postLogout);
 

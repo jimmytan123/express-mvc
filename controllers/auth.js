@@ -53,6 +53,19 @@ exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // Retrieve validation result
+  const errors = validationResult(req);
+
+  // Handle validation errors
+  if (!errors.isEmpty()) {
+    // Return status code 422 indicate validation fail, and render page again
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: errors.array()[0].msg,
+    });
+  }
+
   // Find user by input email
   User.findOne({ email: email })
     .then((user) => {
