@@ -2,6 +2,7 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { validationResult } = require('express-validator');
 
 // Create a transporter object via nodemailer
 // Check Mailtrap website for receiving test emails
@@ -96,6 +97,19 @@ exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
+
+  // Retrieve validation result
+  const errors = validationResult(req);
+
+  // Handle validation errors
+  if (!errors.isEmpty()) {
+    // Return status code 422 indicate validation fail, and render page again
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'Signup',
+      errorMessage: errors.array()[0].msg,
+    });
+  }
 
   // Find if the user already exists by searching email
   User.findOne({ email: email })
