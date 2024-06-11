@@ -96,7 +96,6 @@ exports.postSignup = (req, res, next) => {
   // Retrieve sign up info to create user (TODO: add validation!)
   const email = req.body.email;
   const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
 
   // Retrieve validation result
   const errors = validationResult(req);
@@ -111,42 +110,30 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  // Find if the user already exists by searching email
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash('error', 'Email exists already, please choose another one.');
-        return res.redirect('/signup');
-      }
+  // Generate a hash password for security purpose
+  return bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      // Create a user and save in DB
+      const user = new User({
+        email: email,
+        password: hashedPassword,
+        cart: { items: [] },
+      });
 
-      // Generate a hash password for security purpose
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          // Create a user and save in DB
-          const user = new User({
-            email: email,
-            password: hashedPassword,
-            cart: { items: [] },
-          });
+      return user.save();
+    })
+    .then((result) => {
+      // Redirect user once create user success
+      res.redirect('/login');
 
-          return user.save();
-        })
-        .then((result) => {
-          // Redirect user once create user success
-          res.redirect('/login');
-
-          // Send Email
-          return transporter.sendMail({
-            to: email,
-            from: 'shop@node-complete.com',
-            subject: 'Signup Succeeded!',
-            html: '<h1>You successfully signed up!</h1>',
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      // Send Email
+      return transporter.sendMail({
+        to: email,
+        from: 'shop@node-complete.com',
+        subject: 'Signup Succeeded!',
+        html: '<h1>You successfully signed up!</h1>',
+      });
     })
     .catch((err) => console.log(err));
 };
