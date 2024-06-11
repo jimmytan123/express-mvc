@@ -23,6 +23,8 @@ const userSchema = new Schema({
       },
     ],
   },
+  resetToken: String, // optional for reset pw
+  resetTokenExpiration: Date, // optional for reset pw
 });
 
 // Define method addToCart to the user schema
