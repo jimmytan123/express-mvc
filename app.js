@@ -55,21 +55,6 @@ app.use(csrfProtection);
 // Initialize flash
 app.use(flash());
 
-// Register middleware for setting user in request
-app.use((req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-
-  // Retrive the user doc from DB by using the session user id
-  User.findById(req.session.user._id)
-    .then((user) => {
-      req.user = user; // store user in the request
-      next();
-    })
-    .catch((err) => console.log(err));
-});
-
 // Middleware to set local variables that pass into views
 app.use((req, res, next) => {
   // isAuthenticated and csrfToken will be set for every request that renders views
@@ -78,13 +63,46 @@ app.use((req, res, next) => {
   next();
 });
 
+// Register middleware for setting user in requests
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+
+  // Retrive the user doc from DB by using the session user id
+  User.findById(req.session.user._id)
+    .then((user) => {
+      if (!user) return next();
+
+      req.user = user; // store user in the request
+      next();
+    })
+    .catch((err) => {
+      next(new Error(err));
+    });
+});
+
 // Routes
 // Starting as /admin
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
+
+app.get('/500', errorController.get500);
+
 // Catch all route
 app.use(errorController.get404);
+
+// Error handling middleware(from passing next(error))
+app.use((error, req, res, next) => {
+  // res.redirect('/500');
+
+  res.status(500).render('500', {
+    pageTitle: 'Error!',
+    path: '/500',
+    isAuthenticated: req.session.isLoggedIn,
+  });
+});
 
 mongoose
   .connect(MONGODB_URI)
