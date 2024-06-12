@@ -26,7 +26,7 @@ exports.postAddProduct = (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'Add Product',
-      path: '/admin/edit-product',
+      path: '/admin/add-product',
       editing: false,
       product: {
         title: title,
@@ -56,6 +56,7 @@ exports.postAddProduct = (req, res) => {
     })
     .catch((err) => {
       console.log(err);
+      res.redirect('/500');
     });
 };
 

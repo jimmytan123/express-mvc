@@ -64,10 +64,14 @@ app.use((req, res, next) => {
   // Retrive the user doc from DB by using the session user id
   User.findById(req.session.user._id)
     .then((user) => {
+      if (!user) return next();
+
       req.user = user; // store user in the request
       next();
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      throw new Error(err);
+    });
 });
 
 // Middleware to set local variables that pass into views
@@ -83,6 +87,9 @@ app.use((req, res, next) => {
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
+
+app.get('/500', errorController.get500);
+
 // Catch all route
 app.use(errorController.get404);
 
