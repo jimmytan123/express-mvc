@@ -225,7 +225,6 @@ exports.postReset = (req, res, next) => {
 
     // Retrieve validation result
     const errors = validationResult(req);
-    console.log(errors.array());
 
     if (!errors.isEmpty()) {
       return res.render('auth/reset', {
@@ -299,6 +298,19 @@ exports.postNewPassword = (req, res, next) => {
   const userId = req.body.userId;
   const newPassword = req.body.password;
   const passwordToken = req.body.passwordToken;
+
+  // Retrieve validation result
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.render('auth/new-password', {
+      path: '/new-password',
+      pageTitle: 'New Password',
+      errorMessage: errors.array()[0].msg,
+      userId: userId,
+      passwordToken: passwordToken,
+    });
+  }
 
   let resetUser;
 

@@ -71,7 +71,6 @@ const validationResetPassword = [
     .isEmail()
     .withMessage('Please enter a valid email.')
     .custom((value, { req }) => {
-      console.log(value);
       // Find the user in DB based on the input email
       return User.findOne({ email: value }).then((user) => {
         console.log(user);
@@ -84,9 +83,20 @@ const validationResetPassword = [
     .normalizeEmail(),
 ];
 
+const validationCreateNewPassword = [
+  body(
+    'password',
+    'Please enter a password with only numbers and text and at least 5 characters'
+  )
+    .trim()
+    .isLength({ min: 5 })
+    .isAlphanumeric(),
+];
+
 module.exports = {
   validationLogin,
   validationSignup,
   validationProducts,
   validationResetPassword,
+  validationCreateNewPassword,
 };
