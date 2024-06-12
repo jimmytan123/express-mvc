@@ -1,5 +1,5 @@
 const { check, body } = require('express-validator');
-const { User } = require('../models/user');
+const User = require('../models/user');
 
 const validationLogin = [
   body('email')
@@ -66,8 +66,27 @@ const validationProducts = [
     ),
 ];
 
+const validationResetPassword = [
+  check('email')
+    .isEmail()
+    .withMessage('Please enter a valid email.')
+    .custom((value, { req }) => {
+      console.log(value);
+      // Find the user in DB based on the input email
+      return User.findOne({ email: value }).then((user) => {
+        console.log(user);
+        console.log('hi');
+        if (!user) {
+          return Promise.reject('No account with that email found!');
+        }
+      });
+    })
+    .normalizeEmail(),
+];
+
 module.exports = {
   validationLogin,
   validationSignup,
   validationProducts,
+  validationResetPassword,
 };

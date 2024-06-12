@@ -5,6 +5,7 @@ const authController = require('../controllers/auth');
 const {
   validationLogin,
   validationSignup,
+  validationResetPassword,
 } = require('../middleware/forms-validation.middleware');
 
 router.get('/login', authController.getLogin);
@@ -19,7 +20,7 @@ router.post('/signup', validationSignup, authController.postSignup);
 
 router.get('/reset', authController.getReset);
 
-router.post('/reset', authController.postReset);
+router.post('/reset', validationResetPassword, authController.postReset);
 
 router.get('/reset/:token', authController.getNewPassword);
 

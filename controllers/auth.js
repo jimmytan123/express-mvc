@@ -209,27 +209,36 @@ exports.getReset = (req, res, next) => {
     path: '/reset',
     pageTitle: 'Password Reset',
     errorMessage: message,
+    validationErrors: [],
   });
 };
 
 exports.postReset = (req, res, next) => {
   crypto.randomBytes(32, (err, buffer) => {
     if (err) {
-      console.log(err);
+      // console.log(err);
       return res.redirect('/reset');
     }
 
     // Generate a password reset token
     const token = buffer.toString('hex');
 
+    // Retrieve validation result
+    const errors = validationResult(req);
+    console.log(errors.array());
+
+    if (!errors.isEmpty()) {
+      return res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Password Reset',
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+      });
+    }
+
     // Find the user in DB based on the input email
     User.findOne({ email: req.body.email })
       .then((user) => {
-        if (!user) {
-          req.flash('error', 'No account with that email found.');
-          return res.redirect('/reset');
-        }
-
         // Set user token info
         user.resetToken = token;
         user.resetTokenExpiration = Date.now() + 3600000;
