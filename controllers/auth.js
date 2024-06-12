@@ -2,6 +2,7 @@ const User = require('../models/user');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { validationResult } = require('express-validator');
 
 // Create a transporter object via nodemailer
 // Check Mailtrap website for receiving test emails
@@ -27,6 +28,11 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Login',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+    },
+    validationErrors: [],
   });
 };
 
@@ -43,6 +49,12 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Signup',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    validationErrors: [],
   });
 };
 
@@ -52,13 +64,38 @@ exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // Retrieve validation result
+  const errors = validationResult(req);
+
+  // Handle validation errors
+  if (!errors.isEmpty()) {
+    // Return status code 422 indicate validation fail, and render page again
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Login',
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+      },
+      validationErrors: errors.array(),
+    });
+  }
+
   // Find user by input email
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
-        // Notify the user using flash
-        req.flash('error', 'Invalid email or password.');
-        return res.redirect('/login');
+        return res.status(422).render('auth/login', {
+          path: '/login',
+          pageTitle: 'Login',
+          errorMessage: 'Invalid email or password.',
+          oldInput: {
+            email: email,
+            password: password,
+          },
+          validationErrors: [],
+        });
       }
 
       // Compare the hashed version of the input email to the hased password stored in the DB
@@ -80,8 +117,16 @@ exports.postLogin = (req, res, next) => {
             });
           }
 
-          req.flash('error', 'Invalid email or password.');
-          res.redirect('/login');
+          return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Login',
+            errorMessage: 'Invalid email or password.',
+            oldInput: {
+              email: email,
+              password: password,
+            },
+            validationErrors: [],
+          });
         })
         .catch((err) => {
           console.log(err);
@@ -95,44 +140,50 @@ exports.postSignup = (req, res, next) => {
   // Retrieve sign up info to create user (TODO: add validation!)
   const email = req.body.email;
   const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
 
-  // Find if the user already exists by searching email
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash('error', 'Email exists already, please choose another one.');
-        return res.redirect('/signup');
-      }
+  // Retrieve validation result
+  const errors = validationResult(req);
 
-      // Generate a hash password for security purpose
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          // Create a user and save in DB
-          const user = new User({
-            email: email,
-            password: hashedPassword,
-            cart: { items: [] },
-          });
+  // Handle validation errors
+  if (!errors.isEmpty()) {
+    // Return status code 422 indicate validation fail, and render page again
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'Signup',
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: req.body.confirmPassword,
+      },
+      validationErrors: errors.array(),
+    });
+  }
 
-          return user.save();
-        })
-        .then((result) => {
-          // Redirect user once create user success
-          res.redirect('/login');
+  // Generate a hash password for security purpose
+  return bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      // Create a user and save in DB
+      const user = new User({
+        email: email,
+        password: hashedPassword,
+        cart: { items: [] },
+      });
 
-          // Send Email
-          return transporter.sendMail({
-            to: email,
-            from: 'shop@node-complete.com',
-            subject: 'Signup Succeeded!',
-            html: '<h1>You successfully signed up!</h1>',
-          });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      return user.save();
+    })
+    .then((result) => {
+      // Redirect user once create user success
+      res.redirect('/login');
+
+      // Send Email
+      return transporter.sendMail({
+        to: email,
+        from: 'shop@node-complete.com',
+        subject: 'Signup Succeeded!',
+        html: '<h1>You successfully signed up!</h1>',
+      });
     })
     .catch((err) => console.log(err));
 };
@@ -158,27 +209,35 @@ exports.getReset = (req, res, next) => {
     path: '/reset',
     pageTitle: 'Password Reset',
     errorMessage: message,
+    validationErrors: [],
   });
 };
 
 exports.postReset = (req, res, next) => {
   crypto.randomBytes(32, (err, buffer) => {
     if (err) {
-      console.log(err);
+      // console.log(err);
       return res.redirect('/reset');
     }
 
     // Generate a password reset token
     const token = buffer.toString('hex');
 
+    // Retrieve validation result
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Password Reset',
+        errorMessage: errors.array()[0].msg,
+        validationErrors: errors.array(),
+      });
+    }
+
     // Find the user in DB based on the input email
     User.findOne({ email: req.body.email })
       .then((user) => {
-        if (!user) {
-          req.flash('error', 'No account with that email found.');
-          return res.redirect('/reset');
-        }
-
         // Set user token info
         user.resetToken = token;
         user.resetTokenExpiration = Date.now() + 3600000;
@@ -239,6 +298,19 @@ exports.postNewPassword = (req, res, next) => {
   const userId = req.body.userId;
   const newPassword = req.body.password;
   const passwordToken = req.body.passwordToken;
+
+  // Retrieve validation result
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.render('auth/new-password', {
+      path: '/new-password',
+      pageTitle: 'New Password',
+      errorMessage: errors.array()[0].msg,
+      userId: userId,
+      passwordToken: passwordToken,
+    });
+  }
 
   let resetUser;
 
