@@ -227,7 +227,7 @@ exports.postReset = (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-      return res.render('auth/reset', {
+      return res.status(422).render('auth/reset', {
         path: '/reset',
         pageTitle: 'Password Reset',
         errorMessage: errors.array()[0].msg,
@@ -303,7 +303,7 @@ exports.postNewPassword = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.render('auth/new-password', {
+    return res.status(422).render('auth/new-password', {
       path: '/new-password',
       pageTitle: 'New Password',
       errorMessage: errors.array()[0].msg,
