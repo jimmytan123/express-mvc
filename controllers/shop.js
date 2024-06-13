@@ -206,7 +206,7 @@ exports.getInvoice = (req, res, next) => {
       // file.pipe(res);
 
       const pdfDoc = new PDFDocument();
-      
+
       res.setHeader('Content-Type', 'application/pdf');
       // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
       res.setHeader(
@@ -217,7 +217,36 @@ exports.getInvoice = (req, res, next) => {
       pdfDoc.pipe(fs.createWriteStream(invoicePath));
       pdfDoc.pipe(res);
 
-      pdfDoc.text('Hello World!');
+      /*
+       * Build PDF content
+       */
+      pdfDoc
+        .fontSize(20)
+        .text('Invoice' + ' - ' + order._id, { underline: true, bold: true });
+
+      pdfDoc.fontSize(16).text('Customer: ' + order.user.email);
+
+      pdfDoc.text('------------------------------');
+
+      let totalPrice = 0;
+
+      order.products.forEach((prod) => {
+        totalPrice = totalPrice + prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(16)
+          .text(
+            prod.product.title +
+              ' - ' +
+              prod.quantity +
+              ' x ' +
+              '$' +
+              prod.product.price
+          );
+      });
+
+      pdfDoc.text('------------------------------');
+
+      pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
 
       pdfDoc.end();
     })
