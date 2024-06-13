@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Product = require('../models/product');
 const Order = require('../models/order');
+const PDFDocument = require('pdfkit');
 
 exports.getProducts = (req, res, next) => {
   // Find all documents
@@ -195,14 +196,30 @@ exports.getInvoice = (req, res, next) => {
       //   res.send(data);
       // });
 
-      const file = fs.createReadStream(invoicePath);
+      // const file = fs.createReadStream(invoicePath);
+      // res.setHeader('Content-Type', 'application/pdf');
+      // // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      // res.setHeader(
+      //   'Content-Disposition',
+      //   'inline; filename="' + invoiceName + '"'
+      // );
+      // file.pipe(res);
+
+      const pdfDoc = new PDFDocument();
+      
       res.setHeader('Content-Type', 'application/pdf');
       // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
       res.setHeader(
         'Content-Disposition',
         'inline; filename="' + invoiceName + '"'
       );
-      file.pipe(res);
+
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      pdfDoc.text('Hello World!');
+
+      pdfDoc.end();
     })
     .catch((err) => next(err));
 };
