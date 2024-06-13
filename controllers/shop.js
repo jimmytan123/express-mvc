@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/product');
 const Order = require('../models/order');
 
@@ -158,3 +160,40 @@ exports.getOrders = (req, res, next) => {
 // exports.getCheckout = (req, res, next) => {
 //   res.render('shop/checkout', { path: '/checkout', pageTitle: 'Checkout' });
 // };
+
+exports.getInvoice = (req, res, next) => {
+  // Retrieve orderId from the request
+  const orderId = req.params.orderId;
+
+  Order.findById(orderId)
+    .then((order) => {
+      if (!order) {
+        return next(new Error('No order found!'));
+      }
+
+      // Only the user who placed to order can retrieve the invoice
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return next(new Error('Unauthorized!'));
+      }
+
+      const invoiceName = 'invoice-' + orderId + '.pdf';
+      // The path of the pdf file we are looking for
+      const invoicePath = path.join('data', 'invoices', invoiceName);
+
+      fs.readFile(invoicePath, (err, data) => {
+        if (err) {
+          return next(err);
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+        res.setHeader(
+          'Content-Disposition',
+          'inline; filename="' + invoiceName + '"'
+        );
+
+        res.send(data);
+      });
+    })
+    .catch((err) => next(err));
+};
