@@ -180,20 +180,29 @@ exports.getInvoice = (req, res, next) => {
       // The path of the pdf file we are looking for
       const invoicePath = path.join('data', 'invoices', invoiceName);
 
-      fs.readFile(invoicePath, (err, data) => {
-        if (err) {
-          return next(err);
-        }
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
 
-        res.setHeader('Content-Type', 'application/pdf');
-        // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
-        res.setHeader(
-          'Content-Disposition',
-          'inline; filename="' + invoiceName + '"'
-        );
+      //   res.setHeader('Content-Type', 'application/pdf');
+      //   // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      //   res.setHeader(
+      //     'Content-Disposition',
+      //     'inline; filename="' + invoiceName + '"'
+      //   );
 
-        res.send(data);
-      });
+      //   res.send(data);
+      // });
+
+      const file = fs.createReadStream(invoicePath);
+      res.setHeader('Content-Type', 'application/pdf');
+      // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      res.setHeader(
+        'Content-Disposition',
+        'inline; filename="' + invoiceName + '"'
+      );
+      file.pipe(res);
     })
     .catch((err) => next(err));
 };
