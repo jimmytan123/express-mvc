@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+const fileHelper = require('../util/file');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -16,9 +17,24 @@ exports.getAddProduct = (req, res, next) => {
 */
 exports.postAddProduct = (req, res) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
   const description = req.body.description;
   const price = req.body.price;
+
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      product: {
+        title: title,
+        price: price,
+        description: description,
+      },
+      errorMessage: 'Attached file is not an valid image.',
+      validationErrors: [],
+    });
+  }
 
   // Retrieve validation result
   const errors = validationResult(req);
@@ -30,7 +46,6 @@ exports.postAddProduct = (req, res) => {
       editing: false,
       product: {
         title: title,
-        imageUrl: imageUrl,
         price: price,
         description: description,
       },
@@ -38,6 +53,8 @@ exports.postAddProduct = (req, res) => {
       validationErrors: errors.array(),
     });
   }
+
+  const imageUrl = image.path;
 
   // Create an instance of product model via Mongoose
   const product = new Product({
@@ -97,13 +114,11 @@ exports.getEditProduct = (req, res, next) => {
 };
 
 exports.postEditProduct = (req, res, next) => {
-  const {
-    productId: prodId,
-    title: updatedTitle,
-    imageUrl: updatedImageUrl,
-    description: updatedDescription,
-    price: updatedPrice,
-  } = req.body;
+  const prodId = req.body.productId;
+  const updatedTitle = req.body.title;
+  const updatedPrice = req.body.price;
+  const image = req.file;
+  const updatedDescription = req.body.description;
 
   // Retrieve validation result
   const errors = validationResult(req);
@@ -115,7 +130,6 @@ exports.postEditProduct = (req, res, next) => {
       editing: true,
       product: {
         title: updatedTitle,
-        imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDescription,
         _id: prodId,
@@ -134,7 +148,12 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDescription;
-      product.imageUrl = updatedImageUrl;
+
+      // Update image if there is a new valid file upload when editing
+      if (image) {
+        fileHelper.deleteFile(product.imageUrl);
+        product.imageUrl = image.path;
+      }
 
       return product.save().then((result) => {
         res.redirect('/admin/products');
@@ -167,7 +186,17 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
 
-  Product.deleteOne({ _id: prodId, userId: req.user._id })
+  Product.findById(prodId)
+    .then((product) => {
+      if (!product) {
+        return next(new Error('Product not found'));
+      }
+      // Remove file
+      fileHelper.deleteFile(product.imageUrl);
+
+      // Delete product from DB
+      return Product.deleteOne({ _id: prodId, userId: req.user._id });
+    })
     .then(() => {
       res.redirect('/admin/products');
     })

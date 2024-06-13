@@ -1,5 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/product');
 const Order = require('../models/order');
+const PDFDocument = require('pdfkit');
 
 exports.getProducts = (req, res, next) => {
   // Find all documents
@@ -158,3 +161,94 @@ exports.getOrders = (req, res, next) => {
 // exports.getCheckout = (req, res, next) => {
 //   res.render('shop/checkout', { path: '/checkout', pageTitle: 'Checkout' });
 // };
+
+exports.getInvoice = (req, res, next) => {
+  // Retrieve orderId from the request
+  const orderId = req.params.orderId;
+
+  Order.findById(orderId)
+    .then((order) => {
+      if (!order) {
+        return next(new Error('No order found!'));
+      }
+
+      // Only the user who placed to order can retrieve the invoice
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return next(new Error('Unauthorized!'));
+      }
+
+      const invoiceName = 'invoice-' + orderId + '.pdf';
+      // The path of the pdf file we are looking for
+      const invoicePath = path.join('data', 'invoices', invoiceName);
+
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
+
+      //   res.setHeader('Content-Type', 'application/pdf');
+      //   // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      //   res.setHeader(
+      //     'Content-Disposition',
+      //     'inline; filename="' + invoiceName + '"'
+      //   );
+
+      //   res.send(data);
+      // });
+
+      // const file = fs.createReadStream(invoicePath);
+      // res.setHeader('Content-Type', 'application/pdf');
+      // // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      // res.setHeader(
+      //   'Content-Disposition',
+      //   'inline; filename="' + invoiceName + '"'
+      // );
+      // file.pipe(res);
+
+      const pdfDoc = new PDFDocument();
+
+      res.setHeader('Content-Type', 'application/pdf');
+      // To control how the browser to handle the pdf (inline - open in the browser; attachment - download to the device)
+      res.setHeader(
+        'Content-Disposition',
+        'inline; filename="' + invoiceName + '"'
+      );
+
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      /*
+       * Build PDF content
+       */
+      pdfDoc
+        .fontSize(20)
+        .text('Invoice' + ' - ' + order._id, { underline: true, bold: true });
+
+      pdfDoc.fontSize(16).text('Customer: ' + order.user.email);
+
+      pdfDoc.text('------------------------------');
+
+      let totalPrice = 0;
+
+      order.products.forEach((prod) => {
+        totalPrice = totalPrice + prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(16)
+          .text(
+            prod.product.title +
+              ' - ' +
+              prod.quantity +
+              ' x ' +
+              '$' +
+              prod.product.price
+          );
+      });
+
+      pdfDoc.text('------------------------------');
+
+      pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
+
+      pdfDoc.end();
+    })
+    .catch((err) => next(err));
+};

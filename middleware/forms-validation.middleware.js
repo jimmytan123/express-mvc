@@ -53,7 +53,6 @@ const validationProducts = [
     .isString()
     .isLength({ min: 5, max: 50 })
     .withMessage('Title must be at least 5 characters and max 50 characters'),
-  body('imageUrl').isURL().withMessage('Please enter a valid URL'),
   body('price')
     .trim()
     .isFloat()
