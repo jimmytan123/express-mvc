@@ -4,14 +4,36 @@ const Product = require('../models/product');
 const Order = require('../models/order');
 const PDFDocument = require('pdfkit');
 
+const ITEMS_PER_PAGE = 2;
+
 exports.getProducts = (req, res, next) => {
-  // Find all documents
+  // Retrieve the query parameter /?page=<>
+  const page = +req.query.page || 1;
+
+  let totalItems;
+
   Product.find()
+    .countDocuments()
+    .then((numProducts) => {
+      // Store the number of total products
+      totalItems = numProducts;
+
+      // Find a chunk of products from DBs
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
     .then((products) => {
       res.render('shop/product-list', {
         prods: products,
         pageTitle: 'All Products',
         path: '/products',
+        currentPage: page,
+        previousPage: page - 1,
+        nextPage: page + 1,
+        hasPreviousPage: page > 1,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
@@ -41,12 +63,33 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
+  // Retrieve the query parameter /?page=<>
+  const page = +req.query.page || 1;
+
+  let totalItems;
+
   Product.find()
+    .countDocuments()
+    .then((numProducts) => {
+      // Store the number of total products
+      totalItems = numProducts;
+
+      // Find a chunk of products from DBs
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
     .then((products) => {
       res.render('shop/index', {
         prods: products,
         pageTitle: 'Shop',
         path: '/',
+        currentPage: page,
+        previousPage: page - 1,
+        nextPage: page + 1,
+        hasPreviousPage: page > 1,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        totalPages: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
