@@ -1,6 +1,5 @@
 // Import statement
 const path = require('path');
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -9,12 +8,13 @@ const MongoDBStore = require('connect-mongodb-session')(session); // session sto
 const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
+const helmet = require('helmet');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
-const MONGODB_URI =
-  'mongodb+srv://jimmy:T1G2DA4RfHxeKzn0@cluster0.rueh8it.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0';
+require('dotenv').config();
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.rueh8it.mongodb.net/${process.env.MONGO_DEFAULT_DATABASE}?retryWrites=true&w=majority&appName=Cluster0`;
 
 const app = express();
 const store = new MongoDBStore({
@@ -52,6 +52,9 @@ app.set('views', 'views'); // set views folder as where the views are stored
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
+
+// Use Helmet that helps secure Express apps by setting HTTP response headers
+app.use(helmet());
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -135,8 +138,8 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
-    app.listen(3000);
-    console.log('App listening in localhost:3000...');
+    app.listen(process.env.PORT || 3000);
+    console.log(`Server is running on port ${process.env.PORT || 3000}...`);
   })
   .catch((err) => {
     console.log(err);
