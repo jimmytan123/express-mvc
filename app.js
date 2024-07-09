@@ -9,6 +9,7 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
 const helmet = require('helmet');
+const compression = require('compression');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -55,6 +56,8 @@ const authRoutes = require('./routes/auth');
 
 // Use Helmet that helps secure Express apps by setting HTTP response headers
 app.use(helmet());
+// Compression middleware - compress responses
+app.use(compression());
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
