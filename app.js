@@ -1,5 +1,6 @@
 // Import statement
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -10,6 +11,7 @@ const flash = require('connect-flash');
 const multer = require('multer');
 const helmet = require('helmet');
 const compression = require('compression');
+const morgan = require('morgan');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -54,10 +56,18 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
+// Create a write stream (in append mode)
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, 'access.log'),
+  { flags: 'a' }
+);
+
 // Use Helmet that helps secure Express apps by setting HTTP response headers
 app.use(helmet());
 // Compression middleware - compress responses
 app.use(compression());
+// HTTP request logger middleware - write logs to a file access.log
+app.use(morgan('combined', { stream: accessLogStream }));
 
 // Register a middleware, do the body parsing for us
 app.use(bodyParser.urlencoded({ extended: true }));
